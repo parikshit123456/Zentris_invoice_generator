@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zentris - Proforma Invoice Generator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ LEFT: EDIT FORM ============ -->
+  <div class="form-panel no-print">
+    <h2>Zentris — Proforma Invoice</h2>
+    <!-- <div class="note-box">Company details (Zentris) and logo are built into this template — nothing to upload. Just fill in the buyer &amp; item details below.</div> -->
+
+    <fieldset>
+      <legend>Invoice Meta</legend>
+      <div class="row2">
+        <div><label>Invoice No.</label><input type="text" id="invNo" value="1"></div>
+        <div><label>Dated</label><input type="text" id="invDate" value="1-Aug-26"></div>
+      </div>
+      <div class="row2">
+        <div><label>Delivery Note</label><input type="text" id="deliveryNote" value=""></div>
+        <div><label>Mode/Terms of Payment</label><input type="text" id="paymentTerms" value=""></div>
+      </div>
+      <div class="row2">
+        <div><label>Reference No. &amp; Date</label><input type="text" id="refNo" value=""></div>
+        <div><label>Other References</label><input type="text" id="otherRef" value=""></div>
+      </div>
+      <div class="row2">
+        <div><label>Buyer's Order No.</label><input type="text" id="buyerOrderNo" value=""></div>
+        <div><label>Dated</label><input type="text" id="buyerOrderDate" value=""></div>
+      </div>
+      <div class="row2">
+        <div><label>Dispatch Doc No.</label><input type="text" id="dispatchDocNo" value=""></div>
+        <div><label>Delivery Note Date</label><input type="text" id="deliveryNoteDate" value=""></div>
+      </div>
+      <div class="row2">
+        <div><label>Dispatched through</label><input type="text" id="dispatchedThrough" value="Transport"></div>
+        <div><label>Destination</label><input type="text" id="destination" value="Siliguri"></div>
+      </div>
+      <label>Terms of Delivery (up to 3 lines)</label>
+      <textarea id="termsDelivery" rows="3"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>Consignee (Ship To)</legend>
+      <label>Name</label>
+      <input type="text" id="shipName" value="Subhajit Ghosh">
+      <label>Address (multi-line)</label>
+      <textarea id="shipAddress">C/o Subhajit Ghosh Parthana Appatment Flat No-4
+Rabindra Sarani Rabundra Nagar Siliguri
+Dist :- Darjeeling Siliguri-734006</textarea>
+      <label>Phone</label>
+      <input type="text" id="shipPhone" value="7001590128">
+      <label>State Name / Code</label>
+      <input type="text" id="shipState" value="West Bengal, Code : 19">
+    </fieldset>
+
+    <fieldset>
+      <legend>Buyer (Bill To)</legend>
+      <label><input type="checkbox" id="sameAsShip" checked onclick="toggleSameAsShip()" style="width:auto;display:inline;"> Same as Consignee</label>
+      <div id="buyerFields" style="display:none;">
+        <label>Name</label>
+        <input type="text" id="buyName" value="Subhajit Ghosh">
+        <label>Address (multi-line)</label>
+        <textarea id="buyAddress">C/o Subhajit Ghosh Parthana Appatment Flat No-4
+Rabindra Sarani Rabundra Nagar Siliguri
+Dist :- Darjeeling Siliguri-734006</textarea>
+        <label>Phone</label>
+        <input type="text" id="buyPhone" value="7001590128">
+        <label>State Name / Code</label>
+        <input type="text" id="buyState" value="West Bengal, Code : 19">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Items (min. 5 rows recommended)</legend>
+      <div id="itemsContainer"></div>
+      <button class="btn small" type="button" onclick="addItem()">+ Add Item</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Bank Details</legend>
+      <label>Bank Name</label>
+      <input type="text" id="bankName" value="SBI BANK (7793)">
+      <label>A/c No.</label>
+      <input type="text" id="bankAcc" value="41778577793">
+      <label>Branch &amp; IFS Code</label>
+      <input type="text" id="bankIFS" value="Hisar &amp; SBIN0063926">
+    </fieldset>
+
+    <button class="btn" id="printBtn" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </div>
+
+  <!-- ============ RIGHT: INVOICE PREVIEW ============ -->
+  <div class="preview-wrap">
+    <div id="invoice">
+      <div class="inv-title">Performa Invoice (Not for Sale)</div>
+
+      <!-- Header block: company (fixed) + CSS-grid meta area.
+           Grid rows are 1fr 1fr so "Invoice No./Dated" and
+           "Delivery Note/Mode-Terms" are always exactly equal
+           height and width, regardless of how tall the company
+           block on the left is. -->
+      <div class="header-grid">
+        <div class="hg-company">
+          <img class="logo-slot" src="assets/logo.png" alt="Zentris">
+          <!-- <div class="company-name">Zentris</div> -->
+          <div class="small-label">Rathkhola Matangini Hazra Sarani, Rabindra Sarani, Siliguri M.corp 734 006, Darjeeling, West Bengal, India</div>
+          <div class="small-label">WEB - zentris.in</div>
+          <div class="small-label">CONTACT NO - 86702 86688</div>
+          <div class="small-label">GSTIN/UIN :</div>
+          <div class="small-label">State Name : West Bengal, Code : 19</div>
+          <div class="small-label">E-Mail : zentrispvt@gmail.com</div>
+        </div>
+        <div class="hg-cell hg-invno">
+          <div class="small-label">Invoice No.</div>
+          <div class="bold" id="out_invNo"></div>
+        </div>
+        <div class="hg-cell hg-dated">
+          <div class="small-label">Dated</div>
+          <div class="bold" id="out_invDate"></div>
+        </div>
+        <div class="hg-cell hg-delnote">
+          <div class="small-label">Delivery Note</div>
+          <div id="out_deliveryNote"></div>
+        </div>
+        <div class="hg-cell hg-modeterms">
+          <div class="small-label">Mode/Terms of Payment</div>
+          <div id="out_paymentTerms"></div>
+        </div>
+      </div>
+
+      <!-- Party + reference block -->
+      <table class="frame header-adjoin">
+        <tr>
+          <td rowspan="4" style="width:52%;">
+            <div class="small-label">Consignee (Ship to)</div>
+            <div class="party-name" id="out_shipName"></div>
+            <div class="small-label" id="out_shipAddress" style="white-space:pre-line;"></div>
+            <div class="small-label" id="out_shipPhone"></div>
+            <div class="small-label">State Name : <span id="out_shipState"></span></div>
+          </td>
+          <td style="width:24%;">
+            <div class="small-label">Reference No. &amp; Date.</div>
+            <div id="out_refNo"></div>
+          </td>
+          <td style="width:24%;">
+            <div class="small-label">Other References</div>
+            <div id="out_otherRef"></div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="small-label">Buyer's Order No.</div>
+            <div id="out_buyerOrderNo"></div>
+          </td>
+          <td>
+            <div class="small-label">Dated</div>
+            <div id="out_buyerOrderDate"></div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="small-label">Dispatch Doc No.</div>
+            <div id="out_dispatchDocNo"></div>
+          </td>
+          <td>
+            <div class="small-label">Delivery Note Date</div>
+            <div id="out_deliveryNoteDate"></div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="small-label">Dispatched through</div>
+            <div class="bold" id="out_dispatchedThrough"></div>
+          </td>
+          <td>
+            <div class="small-label">Destination</div>
+            <div class="bold" id="out_destination"></div>
+          </td>
+        </tr>
+        <tr>
+          <td style="width:52%;">
+            <div class="small-label">Buyer (Bill to)</div>
+            <div class="party-name" id="out_buyName"></div>
+            <div class="small-label" id="out_buyAddress" style="white-space:pre-line;"></div>
+            <div class="small-label" id="out_buyPhone"></div>
+            <div class="small-label">State Name : <span id="out_buyState"></span></div>
+          </td>
+          <td colspan="2">
+            <div class="small-label">Terms of Delivery</div>
+            <div class="tod-cell" id="out_termsDelivery" style="white-space:pre-line;"></div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Items table -->
+      <table class="frame items" style="margin-top:-1px;">
+        <thead>
+          <tr>
+            <th style="width:5%;">SI No.</th>
+            <th style="width:33%;">Description of Goods</th>
+            <th style="width:10%;">HSN/SAC</th>
+            <th style="width:12%;">Quantity</th>
+            <th style="width:10%;">Rate</th>
+            <th style="width:6%;">per</th>
+            <th style="width:24%;">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="itemsTableBody"></tbody>
+        <tr>
+          <td colspan="3" class="right bold">Grand Total</td>
+          <td class="bold" id="out_totalQty"></td>
+          <td colspan="2"></td>
+          <td class="bold right" id="out_grandTotal"></td>
+        </tr>
+      </table>
+
+      <table class="frame" style="margin-top:-1px;">
+        <tr>
+          <td style="width:70%;">
+            <div class="small-label">Amount Chargeable (in words)</div>
+            <div class="amt-words" id="out_amountWords"></div>
+          </td>
+          <td class="right small-label">E. &amp; O.E</td>
+        </tr>
+      </table>
+
+      <table class="frame" style="margin-top:-1px;">
+        <thead>
+          <tr>
+            <th rowspan="2">HSN/SAC</th>
+            <th rowspan="2">Taxable Value</th>
+            <th colspan="2">Integrated Tax</th>
+            <th rowspan="2">Total Tax Amount</th>
+          </tr>
+          <tr><th>Rate</th><th>Amount</th></tr>
+        </thead>
+        <tbody id="hsnSummaryBody"></tbody>
+        <tr>
+          <td class="right bold">Total</td>
+          <td class="bold right" id="out_taxableTotal"></td>
+          <td></td>
+          <td class="bold right" id="out_taxTotal"></td>
+          <td class="bold right" id="out_taxTotal2"></td>
+        </tr>
+      </table>
+
+      <table class="frame" style="margin-top:-1px;">
+        <tr>
+          <td>
+            <div class="small-label">Tax Amount (in words) : <span class="bold" id="out_taxWords"></span></div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="small-label">Company's Bank Details</div>
+            <div class="small-label">Bank Name &nbsp;&nbsp;&nbsp;: <span class="bold" id="out_bankName"></span></div>
+            <div class="small-label">A/c No. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span class="bold" id="out_bankAcc"></span></div>
+            <div class="small-label">Branch &amp; IFS Code : <span class="bold" id="out_bankIFS"></span></div>
+          </td>
+        </tr>
+      </table>
+
+      <table class="frame" style="margin-top:-1px;">
+        <tr>
+          <td style="width:55%;">
+            <div class="small-label bold">Declaration</div>
+            <div class="small-label">We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</div>
+          </td>
+          <td style="width:45%;">
+            <div class="right bold">for Zentris</div>
+            <div class="sign-space"></div>
+            <div class="right small-label">Authorised Signatory</div>
+          </td>
+        </tr>
+      </table>
+
+      <div class="footer-note">This is a Computer Generated Invoice</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
